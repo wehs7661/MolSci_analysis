@@ -48,6 +48,7 @@ setup(
     entry_points={
         'console_scripts':[
             'plumed_driver = MolSci_analysis.plumed_driver:main',
+            'plot_2d = MolSci_analysis.plot_2d:main'
         ],
     },
 

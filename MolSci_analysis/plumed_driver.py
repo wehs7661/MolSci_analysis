@@ -52,6 +52,8 @@ def main():
     'sans-serif': ['DejaVu Sans'],
     'size': 10
     })
+    # Set the font used for MathJax - more on this later
+    rc('mathtext', **{'default': 'regular'})
     plt.rc('font', family='serif')
 
     args = initialize()
@@ -147,3 +149,7 @@ def main():
 
     plt.savefig('%s.png' % args.pngname)
     plt.show()
+
+    delta2 = np.power(y[0] - y[1], 2)
+    RMSD = np.sqrt(np.sum(delta2) / len(delta2))
+    print(RMSD)
