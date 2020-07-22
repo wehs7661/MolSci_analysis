@@ -30,7 +30,14 @@ def initialize():
                         '--ylabel',
                         type=str,
                         help='The name and units of y-axis')
-    parser.add_argument('-t', '--title', type=str, help='Title of the plot')
+    parser.add_argument('-c', '--column', 
+                        type=int, 
+                        default=1,
+                        help='The column index of the dependent variable.')
+    parser.add_argument('-t', 
+                        '--title', 
+                        type=str, 
+                        help='Title of the plot')
     parser.add_argument('-n',
                         '--pngname',
                         type=str,
@@ -96,7 +103,7 @@ def main():
 
         # read in data starting from (m+1)-th line to the end
         n = m   # line number
-        for line in lines[m:]:
+        for line in lines[m:-1]:
             n += 1
             if '#' not in line and line[0] != '@':
                 # Note that when extending MetaD, COLVAR might append #! FIELDS ... 
@@ -108,7 +115,7 @@ def main():
                 # the same time frame of before the simulation gest extended.
                 tokens = line.split()
                 x.append(float(tokens[0]))
-                y.append(float(tokens[1]))
+                y.append(float(tokens[args.column]))
             elif '#' in line:  # the case the MetaD is extended
                 tokens = lines[n].split()  # the next line of #! FIELDS ...
                 x = np.array(x)
@@ -156,7 +163,7 @@ def main():
         conversion1 = 1.38064852 * 6.02 * args.temp / 1000  # multiply to convert from kT to kJ/mol
         conversion2 = np.pi/180 # multiply to convert from degree to radian
         conversion3 = 0.239005736  # multiply to convert from kJ/mol to kcal/mol
-
+        
         if args.x_conversion == 'ps to ns':
             x = x / 1000
             x_unit = ' ns'
@@ -235,12 +242,11 @@ def main():
             diff = np.abs(y - y_avg)
             t_avg = x[np.argmin(diff)]
             print('The configuration at %s%s has the %s (%s%s) that is cloest to the average volume.' % (t_avg, x_unit, y_var, y[np.argmin(diff)], y_unit))
-
         plt.plot(x, y, label='%s' % args.legend[i])
         # plt.hold(True)
 
-    
-    plt.title('%s' % args.title)
+    if args.title is not None:
+        plt.title('%s' % args.title)
     plt.xlabel('%s' % args.xlabel)
     #plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
     plt.ylabel('%s' % args.ylabel)

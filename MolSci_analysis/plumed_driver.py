@@ -77,7 +77,7 @@ def main():
             break
         
     for line in lines[line_n:]:
-        if line[0] != 'P':     # in case of including "PLUMED:   "
+        if line[0] != 'P' and line[0] != '#':     # in case of including "PLUMED:   "
             data = line.split()
             x.append(float(data[0]))
 
@@ -122,11 +122,17 @@ def main():
         plt.plot(x, y)
     else:
         for i in range(n_vars - 1):
+            if i == 0:
+                plt.plot(x, y[0])
+                plt.ylim([0, 8])
+
+            """
             if args.legends is not None:
                 plt.plot(x, y[i], label='%s' % args.legends[i])
             else:
                 plt.plot(x, y[i], label='%s' % variables[i + 1])
-            plt.legend()            
+            plt.legend()    
+            """        
     
     plt.xlabel('%s' % args.xlabel)
     plt.ylabel('%s' % args.ylabel)
@@ -151,5 +157,4 @@ def main():
     plt.show()
 
     delta2 = np.power(y[0] - y[1], 2)
-    RMSD = np.sqrt(np.sum(delta2) / len(delta2))
-    print(RMSD)
+    #RMSD = np.sqrt(np.sum(delta2) / len(delta2))
