@@ -50,7 +50,8 @@ setup(
             'plumed_driver = MolSci_analysis.plumed_driver:main',
             'plot_2d = MolSci_analysis.plot_2d:main',
             'COLVAR_hist = MolSci_analysis.COLVAR_hist:main',
-            'bias_evolution = MolSci_analysis.bias_evolution:main'
+            'bias_evolution = MolSci_analysis.bias_evolution:main',
+            'convert_energy = MolSci_analysis.convert_energy:main'
         ],
     },
 

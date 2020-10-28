@@ -216,6 +216,12 @@ def main():
         if args.y_conversion == 'kcal/mol to kJ/mol':
             y = y / conversion3
             y_unit = 'kcal/mol'
+        if args.y_conversion == 'kJ/mol to kT':
+            y = y / conversion1
+            y_unit = 'kT'
+        if args.y_conversion == 'kT to kJ/mol':
+            y = y * conversion1
+            y_unit = 'kJ/mol'
         if args.y_conversion == 'degree to radian':
             y = y * conversion2
             y_unit = ' radian'
