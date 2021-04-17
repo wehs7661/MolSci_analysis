@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """This is a Python code for the plotting of 2-dimensional data.
 """
-
+import natsort
 import argparse
 import os.path
 import numpy as np
@@ -19,7 +19,6 @@ def initialize():
                         help='Names of the input .xvg files')
     parser.add_argument('-l',
                         '--legend',
-                        default='label',
                         nargs='+',
                         help='Legends of the curves')
     parser.add_argument('-x',
@@ -50,6 +49,14 @@ def initialize():
                         '--y_conversion',
                         choices=['degree to radian', 'radian to degree', 'kT to kcal/mol', 'kcal/mol to kT', 'kT to kJ/mol', 'kJ/mol to kT', 'kJ/mol to kcal/mol', 'kcal/mol to kJ/mol'],
                         help='The unit conversion for the data in y-axis.')
+    parser.add_argument('-fx',
+                        '--factor_x',
+                        type=float,
+                        help='The factor to be multiplied to the x values.')
+    parser.add_argument('-fy',
+                        '--factor_y',
+                        type=float,
+                        help='The factor to be multiplied to the y values.')
     parser.add_argument('-T',
                         '--temp',
                         help='Temperature for unit convesion involving kT. Default: 298.15.')
@@ -77,10 +84,16 @@ def main():
 
     plt.figure()  # ready to plot!
 
+    if '*' in args.xvg:
+        args.xvg = natsort.natsorted(args.xvg, reverse=False)
+
     if isinstance(args.xvg, str):  # the case of only one input
         args.xvg = list(args.xvg)
         # for the case of only one input, the legend arugment takes the default
         # but will not be shown
+    
+    if args.legend is None:
+        args.legend = args.xvg
 
     for i in range(len(args.xvg)):
         result_str = '\nData analysis of the file: %s' % args.xvg[i]
@@ -229,6 +242,11 @@ def main():
             y = y / conversion2
             y_unit = ' degree'
 
+        if args.factor_x is not None:
+            x = x * args.factor_x
+        if args.factor_y is not None:
+            y = y * args.factor_y
+
         # Some simple data analysis
         if args.truncate is None:
             # no truncation required
@@ -248,7 +266,10 @@ def main():
             diff = np.abs(y - y_avg)
             t_avg = x[np.argmin(diff)]
             print('The configuration at %s%s has the %s (%s%s) that is cloest to the average volume.' % (t_avg, x_unit, y_var, y[np.argmin(diff)], y_unit))
-        plt.plot(x, y, label='%s' % args.legend[i])
+        if args.legend is None:
+            plt.plot(x, y)
+        else:
+            plt.plot(x, y, label='%s' % args.legend[i])
         # plt.hold(True)
 
     if args.title is not None:
@@ -260,8 +281,9 @@ def main():
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
     plt.grid(True)
 
-    if len(args.xvg) > 1:
-        plt.legend(ncol=2)
+    if args.legend is not None:
+        if len(args.xvg) > 1:
+            plt.legend(ncol=2)
 
     plt.savefig('%s.png' % args.pngname)
     plt.show()
