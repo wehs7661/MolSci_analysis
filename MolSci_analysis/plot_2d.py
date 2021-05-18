@@ -32,7 +32,7 @@ def initialize():
     parser.add_argument('-c', '--column', 
                         type=int, 
                         default=1,
-                        help='The column index of the dependent variable.')
+                        help='The column (python) index of the dependent variable.')
     parser.add_argument('-t', 
                         '--title', 
                         type=str, 
@@ -66,6 +66,12 @@ def initialize():
     parser.add_argument('-r',
                         '--retain',
                         help='-r 1 means only analyze the first 1%% of the data.')
+    parser.add_argument('-lc',
+                        '--legend_col',
+                        type=int,
+                        default=1,
+                        help='The number of columns of the legends.')
+    
     args_parse = parser.parse_args()
 
     return args_parse
@@ -282,7 +288,7 @@ def main():
         # plt.hold(True)
 
     if args.title is not None:
-        plt.title('%s' % args.title)
+        plt.title('%s' % args.title, weight='bold')
     plt.xlabel('%s' % args.xlabel)
     #plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
     plt.ylabel('%s' % args.ylabel)
@@ -292,7 +298,7 @@ def main():
 
     if args.legend is not None:
         if len(args.xvg) > 1:
-            plt.legend(ncol=2)
+            plt.legend(ncol=args.lengend_col)
 
     plt.savefig('%s.png' % args.pngname)
     plt.show()
