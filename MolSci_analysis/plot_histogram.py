@@ -28,8 +28,10 @@ def initialize():
     parser.add_argument('-y',
                         '--ylabel',
                         type=str,
+                        default='Count',
                         help='The name and units of y-axis')
-    parser.add_argument('-c', '--column', 
+    parser.add_argument('-c', 
+                        '--column', 
                         type=int, 
                         default=1,
                         help='The column index of the dependent variable.')
@@ -46,29 +48,35 @@ def initialize():
                         type=int,
                         default=200,
                         help='The number of bins for the histogram.')
-    parser.add_argument('-cx',
-                        '--x_conversion',
+    parser.add_argument('-c',
+                        '--conversion',
                         choices=['degree to radian', 'radian to degree', 'kT to kcal/mol', 'kcal/mol to kT', 'kT to kJ/mol', 'kJ/mol to kT', 'kJ/mol to kcal/mol', 'kcal/mol to kJ/mol', 'ns to ps', 'ps to ns'],
                         help='The unit conversion for the data in x-axis.')
-    parser.add_argument('-cy',
-                        '--y_conversion',
-                        choices=['degree to radian', 'radian to degree', 'kT to kcal/mol', 'kcal/mol to kT', 'kT to kJ/mol', 'kJ/mol to kT', 'kJ/mol to kcal/mol', 'kcal/mol to kJ/mol'],
-                        help='The unit conversion for the data in y-axis.')
-    parser.add_argument('-fx',
-                        '--factor_x',
+    parser.add_argument('-f',
+                        '--factor',
                         type=float,
-                        help='The factor to be multiplied to the x values.')
-    parser.add_argument('-fy',
-                        '--factor_y',
-                        type=float,
-                        help='The factor to be multiplied to the y values.')
+                        help='The factor to be multiplied to the x values of the histogram.')
     parser.add_argument('-T',
                         '--temp',
                         help='Temperature for unit convesion involving kT. Default: 298.15.')
+    parser.add_argument('-o',
+                        '--outline',
+                        default=False,
+                        action='store_true',
+                        help='Whether to plot the histogram outline.')
     parser.add_argument('-tr',
                         '--truncate',
                         help='-tr 1 means truncate the first 1%% of the data.')
-    
+    parser.add_argument('-Nb',
+                        '--Nr_bound',
+                        nargs='+',
+                        help='The lower and upper bounds of the x axis for N_ratio calculation. Only valid when -nr is not specified.')
+    parser.add_argument('-nr',
+                        '--n_ratio',
+                        nargs='+',
+                        help='The x values/centers of the bins (x1, x2) for calculating N_ratio = x1/x2. \
+                            If this is not specified, x1=max of x and x2=min of x.')
+
     args_parse = parser.parse_args()
 
     return args_parse
@@ -182,63 +190,31 @@ def main():
         conversion2 = np.pi/180 # multiply to convert from degree to radian
         conversion3 = 0.239005736  # multiply to convert from kJ/mol to kcal/mol
         
-        if args.x_conversion == 'ps to ns':
-            x = x / 1000
+        if args.conversion == 'ps to ns':
+            y = y / 1000
             x_unit = ' ns'
 
-        if args.x_conversion == 'ns to ps':
-            x = x * 1000
-            x_unit = ' ps'
+        if args.conversion == 'ns to ps':
+            y = y * 1000
+            y_unit = ' ps'
 
-        if args.x_conversion == 'kT to kJ/mol':
-            x = x * conversion1
-            x_unit = ' kcal/mol'
-        if args.x_conversion == 'kJ/mol to kT':
-            x = x / conversion1
-            x_unit = ' kT'
-        if args.x_conversion == 'kT to kcal/mol':
-            x = x * conversion1 * conversion3
-            x_unit = ' kcal/mol'
-        if args.x_conversion == 'kcal/mol to kT':
-            x = x / (conversion1 * conversion3)
-            x_unit = ' kT'
-        if args.x_conversion == 'kJ/mol to kcal/mol':
-            x = x * conversion3
-            x_unit = 'kcal/mol'
-        if args.x_conversion == 'kcal/mol to kJ/mol':
-            x = x / conversion3
-            x_unit = 'kJ/mol'
-        if args.x_conversion == 'degree to radian':
-            x = x * conversion2
-            x_unit = ' radian'
-        if args.x_conversion == 'radian to degree':
-            x = x / conversion2
-            x_unit = ' degree'
-
-
-        if args.y_conversion == 'kT to kcal/mol':
+        if args.y_conversion == 'kT to kJ/mol':
             y = y * conversion1
             y_unit = ' kcal/mol'
-        if args.y_conversion == 'kcal/mol to kT':
+        if args.y_conversion == 'kJ/mol to kT':
             y = y / conversion1
             y_unit = ' kT'
         if args.y_conversion == 'kT to kcal/mol':
             y = y * conversion1 * conversion3
-            y_unit = 'kcal/mol'
+            y_unit = ' kcal/mol'
         if args.y_conversion == 'kcal/mol to kT':
             y = y / (conversion1 * conversion3)
-            y_unit = 'kcal/mol'
+            y_unit = ' kT'
         if args.y_conversion == 'kJ/mol to kcal/mol':
             y = y * conversion3
             y_unit = 'kcal/mol'
         if args.y_conversion == 'kcal/mol to kJ/mol':
             y = y / conversion3
-            y_unit = 'kcal/mol'
-        if args.y_conversion == 'kJ/mol to kT':
-            y = y / conversion1
-            y_unit = 'kT'
-        if args.y_conversion == 'kT to kJ/mol':
-            y = y * conversion1
             y_unit = 'kJ/mol'
         if args.y_conversion == 'degree to radian':
             y = y * conversion2
@@ -247,10 +223,8 @@ def main():
             y = y / conversion2
             y_unit = ' degree'
 
-        if args.factor_x is not None:
-            x = x * args.factor_x
-        if args.factor_y is not None:
-            y = y * args.factor_y
+        if args.factor is not None:
+            y = y * args.factor
 
         # Some simple data analysis
         if args.truncate is None:
@@ -271,9 +245,31 @@ def main():
             diff = np.abs(y - y_avg)
             t_avg = x[np.argmin(diff)]
             print('The configuration at %s%s has the %s (%s%s) that is cloest to the average volume.' % (t_avg, x_unit, y_var, y[np.argmin(diff)], y_unit))
-        results = plt.hist(y, bins=args.nbins)
-        print(np.max(results[0])/np.min(results[0]))
-        # plt.hold(True)
+
+        # Calculate the N_ratio and plot the histogram
+        if args.n_ratio is None:   # N_ratio = x(max) / x(min)
+            if args.Nr_bound is not None:
+                lower_b, upper_b = args.Nr_bound[0], args.Nr_bound[1]
+                y = [y < upper_b]
+                y = [y > lower_b]
+            if args.outline is True:
+                results = plt.hist(y, bins=args.nbins, edgecolor='black', linewidth=1.2)
+            elif args.outline is False:
+                results = plt.hist(y, bins=args.nbins)
+            N_ratio = np.max(results[0])/np.min(results[0])
+        else:
+            if args.outline is True:
+                results = plt.hist(y, bins=args.nbins, edgecolor='black', linewidth=1.2)
+            elif args.outline is False:
+                results = plt.hist(y, bins=args.nbins)
+            centers = list(results[1])
+            for c in args.n_ratio:
+                if c not in centers:
+                    print('Centers specified for N_ratio calculation not found! Calculation of N_ratio is skipped.')
+                    break
+            c1, c2 = args.n_ratio[0], args.n_ratio[1]
+            N_ratio = results[0][centers.index(c1)] / results[0][centers.index(c2)]
+        print(f'N_ratio = {N_ratio}')
 
     if args.title is not None:
         plt.title('%s' % args.title)

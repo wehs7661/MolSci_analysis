@@ -52,7 +52,8 @@ setup(
             'plot_histogram = MolSci_analysis.plot_histogram:main',
             'COLVAR_hist = MolSci_analysis.COLVAR_hist:main',
             'bias_evolution = MolSci_analysis.bias_evolution:main',
-            'convert_energy = MolSci_analysis.convert_energy:main'
+            'convert_energy = MolSci_analysis.convert_energy:main',
+            'combine_plots = MolSci_analysis.combine_plots:main'
         ],
     },
 
