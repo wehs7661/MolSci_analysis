@@ -78,5 +78,4 @@ def main():
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
     plt.grid()
     plt.savefig(args.pngname, dpi=600)
-    plt.show()
     

@@ -41,6 +41,11 @@ def initialize():
                         '--pngname',
                         type=str,
                         help='The filename of the figure, not including the extension')
+    parser.add_argument('-nb',
+                        '--nbins',
+                        type=int,
+                        default=200,
+                        help='The number of bins for the histogram.')
     parser.add_argument('-cx',
                         '--x_conversion',
                         choices=['degree to radian', 'radian to degree', 'kT to kcal/mol', 'kcal/mol to kT', 'kT to kJ/mol', 'kJ/mol to kT', 'kJ/mol to kcal/mol', 'kcal/mol to kJ/mol', 'ns to ps', 'ps to ns'],
@@ -63,9 +68,7 @@ def initialize():
     parser.add_argument('-tr',
                         '--truncate',
                         help='-tr 1 means truncate the first 1%% of the data.')
-    parser.add_argument('-r',
-                        '--retain',
-                        help='-r 1 means only analyze the first 1%% of the data.')
+    
     args_parse = parser.parse_args()
 
     return args_parse
@@ -138,7 +141,7 @@ def main():
                 x = list(x)
                 y = y[:len(x)]
         x, y = np.array(x), np.array(y)
-
+        
         # Unit conversion
         if args.xlabel is not None:
             if '(' in args.xlabel:
@@ -257,13 +260,6 @@ def main():
             y = y[int(0.01 * float(args.truncate) * len(y)):]  # truncate the first 1% of the data
             x = x[int(0.01 * float(args.truncate) * len(x)):]  
             print('Note that the first %s of the data is truncated, which is the data that the following statistics is based on.' % args.truncate)
-        
-        if args.retain is None:
-            pass
-        else:
-            y = y[:int(0.01 * float(args.retain) * len(y))]
-            x = x[:int(0.01 * float(args.retain) * len(x))]
-        
         y_avg = np.mean(y)
         y2_avg = np.mean(np.power(y, 2))
         RMSF = np.sqrt((y2_avg - y_avg ** 2)) / y_avg
@@ -275,10 +271,8 @@ def main():
             diff = np.abs(y - y_avg)
             t_avg = x[np.argmin(diff)]
             print('The configuration at %s%s has the %s (%s%s) that is cloest to the average volume.' % (t_avg, x_unit, y_var, y[np.argmin(diff)], y_unit))
-        if args.legend is None:
-            plt.plot(x, y)
-        else:
-            plt.plot(x, y, label='%s' % args.legend[i])
+        results = plt.hist(y, bins=args.nbins)
+        print(np.max(results[0])/np.min(results[0]))
         # plt.hold(True)
 
     if args.title is not None:
@@ -286,7 +280,7 @@ def main():
     plt.xlabel('%s' % args.xlabel)
     #plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
     plt.ylabel('%s' % args.ylabel)
-    if max(abs(y)) >= 10000:
+    if max(abs(results[0])) >= 10000:
         plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
     plt.grid(True)
 
