@@ -31,7 +31,6 @@ def initialize():
                         default=False,
                         action='store_true',
                         help='Whether to show the border lines of each subplot.')
-    
     parser.add_argument('-n',
                         '--pngname',
                         help='The name of the figure, not cluding the extension.')
